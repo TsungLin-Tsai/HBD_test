@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Pixel Game</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #87CEEB; /* Sky blue */
+    }
+    canvas {
+      border: 2px solid #000;
+      image-rendering: pixelated; /* Ensures pixel art looks sharp */
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="800"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Game settings
+    const playerSize = 256; // Adjusted for character image size
+    const playerSpeed = 2;
+
+    // Player object
+    const player = {
+      x: canvas.width / 2 - playerSize / 2,
+      y: canvas.height / 2 - playerSize / 2,
+      targetX: canvas.width / 2 - playerSize / 2,
+      targetY: canvas.height / 2 - playerSize / 2,
+    };
+
+    // Load character image
+    const playerImage = new Image();
+    playerImage.src = './character.png'; // Replace with your character image
+
+    playerImage.onload = () => {
+      console.log('Character image loaded!');
+    };
+
+    // Function to draw the player
+    function drawPlayer() {
+      ctx.drawImage(playerImage, player.x, player.y, playerSize, playerSize);
+    }
+
+    // Function to update player position
+    function updatePlayer() {
+      const dx = player.targetX - player.x;
+      const dy = player.targetY - player.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > playerSpeed) {
+        player.x += (dx / distance) * playerSpeed;
+        player.y += (dy / distance) * playerSpeed;
+      } else {
+        player.x = player.targetX;
+        player.y = player.targetY;
+      }
+    }
+
+    // Function to clear the canvas
+    function clearCanvas() {
+      ctx.fillStyle = "#228B22"; // Background color (green grass)
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Main game loop
+    function gameLoop() {
+      clearCanvas();
+      updatePlayer();
+      drawPlayer();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Event listener for mouse clicks
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      player.targetX = e.clientX - rect.left - playerSize / 2;
+      player.targetY = e.clientY - rect.top - playerSize / 2;
+    });
+
+    // Start the game loop
+    gameLoop();
+  </script>
+</body>
+</html>
