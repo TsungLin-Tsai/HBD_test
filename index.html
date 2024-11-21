@@ -77,16 +77,9 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Main game loop
-    function gameLoop() {
-      clearCanvas();
-      updatePlayer();
-      drawPlayer();
-      requestAnimationFrame(gameLoop);
-    }
 
-            // 愛心方程參數
-            const scale = 100; // 放大比例
+    // 愛心方程參數
+    const scale = 10; // 放大比例
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
@@ -128,10 +121,21 @@
 
     // 主程序
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+      //ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
       drawHeart(); // 繪製愛心
       writeEquation(); // 寫入公式
     }
+
+    // Main game loop
+    function gameLoop() {
+      clearCanvas();
+      updatePlayer();
+      drawPlayer();
+      draw();
+      requestAnimationFrame(gameLoop);
+
+    }
+
 
     //draw();
 
