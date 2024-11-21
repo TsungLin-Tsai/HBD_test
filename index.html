@@ -25,7 +25,6 @@
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-
     // Game settings
     const playerSize = 256; // Adjusted for character image size
     const playerSpeed = 2;
@@ -37,6 +36,12 @@
       targetX: canvas.width / 2 - playerSize / 2,
       targetY: canvas.height / 2 - playerSize / 2,
     };
+
+
+    
+
+
+
 
     // Load character image
     const playerImage = new Image();
@@ -80,6 +85,75 @@
       requestAnimationFrame(gameLoop);
     }
 
+            // 愛心方程參數
+            const scale = 100; // 放大比例
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // 繪製愛心曲線
+    function drawHeart() {
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY); // 起始位置
+
+      for (let t = 0; t <= 2 * Math.PI; t += 0.01) {
+        const x = 16 * Math.pow(Math.sin(t), 3); // x 方程
+        const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t); // y 方程
+
+        const canvasX = centerX + x * scale;
+        const canvasY = centerY - y * scale;
+
+        ctx.lineTo(canvasX, canvasY);
+      }
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // 在愛心內寫公式
+    function writeEquation() {
+      ctx.font = "20px Arial";
+      ctx.fillStyle = "black";
+      ctx.textAlign = "center";
+
+      const equation = [
+        "x = 16 sin³(t)",
+        "y = 13 cos(t) - 5 cos(2t)",
+        "- 2 cos(3t) - cos(4t)"
+      ];
+
+      equation.forEach((line, index) => {
+        ctx.fillText(line, centerX, centerY - 50 + index * 30); // 調整文本位置
+      });
+    }
+
+    // 主程序
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+      drawHeart(); // 繪製愛心
+      writeEquation(); // 寫入公式
+    }
+
+    //draw();
+
+
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth; // 設置畫布寬度為窗口寬度
+      canvas.height = window.innerHeight; // 設置畫布高度為窗口高度
+      draw(); // 繪製愛心和公式
+    }
+
+    // 初始化畫布大小
+    resizeCanvas();
+
+
+
+
+    // 監聽窗口大小改變事件
+    window.addEventListener("resize", resizeCanvas);
+    //show heart
+    window.addEventListener("resize", draw);
+
     // Event listener for mouse clicks
     canvas.addEventListener("click", (e) => {
       const rect = canvas.getBoundingClientRect();
@@ -88,7 +162,7 @@
     });
 
     // Start the game loop
-    gameLoop();
+    gameLoop()
   </script>
 </body>
 </html>
