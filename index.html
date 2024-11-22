@@ -1,172 +1,211 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2D Pixel Game</title>
+  <title>阿筠HBD</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
       margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #87CEEB; /* Sky blue */
+      padding: 0;
     }
-    canvas {
-      border: 2px solid #000;
-      image-rendering: pixelated; /* Ensures pixel art looks sharp */
+    .game-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    .book {
+      background-color: #ffe4b5;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      font-size: 18px;
+      position: relative;
+    }
+    .completed {
+      background-color: #b0e57c;
+      color: #ffffff;
+    }
+    .hidden {
+      display: none;
+    }
+    .question-container, .hint-container {
+      margin-top: 20px;
+    }
+    .magic-square {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      max-width: 200px;
+      margin: 20px auto;
+    }
+    .square-cell {
+      width: 50px;
+      height: 50px;
+      background-color: #add8e6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border: 1px solid #000;
+    }
+    .square-input {
+      width: 50px;
+      height: 50px;
+      font-size: 18px;
+      text-align: center;
+      border: 1px solid #000;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width=window.innerWidth height=window.innerHeight></canvas>
+  <h1>阿筠生日小解謎(輸入阿拉伯數字)</h1>
+  <div class="game-container">
+    <div class="book" data-question="糟糠之__">Q1</div>
+    <div class="book" data-question="八面__瓏">Q2</div>
+    <div class="book" data-question="__文弄墨">Q3</div>
+    <div class="book" data-question="比翼__飛">Q4</div>
+    <div class="book" data-question="不吝__教">Q5</div>
+    <div class="book" data-question="__離斑駁">Q6</div>
+    <div class="book" data-question="燈火闌__">Q7</div>
+    <div class="book" data-question="劍__弩張">Q8</div>
+    <div class="book" data-question="離情____">Q9</div>
+  </div>
+
+  <div class="question-container hidden">
+    <h2 id="question-title"></h2>
+    <input type="number" id="answer-input" placeholder="輸入數字" />
+    <button onclick="submitAnswer()">阿筠交答案!</button>
+  </div>
+
+  <div class="hint-container hidden">
+    <h3>根據剛剛得到的數字，讓九宮格內的直列、橫列和斜列的總和相等！</h3>
+    <div id="hint-numbers"></div>
+  </div>
+
+  <div class="magic-square hidden">
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+    <div class="square-cell">
+      <input class="square-input" type="number" />
+    </div>
+  </div>
+
+  <button class="hidden magic-check-button" onclick="checkMagicSquare()">阿筠交答案!</button>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    // Game settings
-    const playerSize = 256; // Adjusted for character image size
-    const playerSpeed = 2;
+    const books = document.querySelectorAll('.book');
+    const questionContainer = document.querySelector('.question-container');
+    const hintContainer = document.querySelector('.hint-container');
+    const hintNumbers = document.getElementById('hint-numbers');
+    const magicSquare = document.querySelector('.magic-square');
+    const magicCheckButton = document.querySelector('.magic-check-button');
 
-    // Player object
-    const player = {
-      x: canvas.width / 2 - playerSize / 2,
-      y: canvas.height / 2 - playerSize / 2,
-      targetX: canvas.width / 2 - playerSize / 2,
-      targetY: canvas.height / 2 - playerSize / 2,
-    };
+    const answers = [7, 0, 5, 2, 4, 6, 3, 8, 1];
+    const userAnswers = [];
+    let currentBook = null;
 
-
-    
-
-
-
-
-    // Load character image
-    const playerImage = new Image();
-    playerImage.src = './character.png'; // Replace with your character image
-
-    playerImage.onload = () => {
-      console.log('Character image loaded!');
-    };
-
-    // Function to draw the player
-    function drawPlayer() {
-      ctx.drawImage(playerImage, player.x, player.y, playerSize, playerSize);
-    }
-
-    // Function to update player position
-    function updatePlayer() {
-      const dx = player.targetX - player.x;
-      const dy = player.targetY - player.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (distance > playerSpeed) {
-        player.x += (dx / distance) * playerSpeed;
-        player.y += (dy / distance) * playerSpeed;
-      } else {
-        player.x = player.targetX;
-        player.y = player.targetY;
-      }
-    }
-
-    // Function to clear the canvas
-    function clearCanvas() {
-      ctx.fillStyle = "#228B22"; // Background color (green grass)
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-
-    // 愛心方程參數
-    const scale = 10; // 放大比例
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    // 繪製愛心曲線
-    function drawHeart() {
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY); // 起始位置
-
-      for (let t = 0; t <= 2 * Math.PI; t += 0.01) {
-        const x = 16 * Math.pow(Math.sin(t), 3); // x 方程
-        const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t); // y 方程
-
-        const canvasX = centerX + x * scale;
-        const canvasY = centerY - y * scale;
-
-        ctx.lineTo(canvasX, canvasY);
-      }
-      ctx.strokeStyle = "red";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    // 在愛心內寫公式
-    function writeEquation() {
-      ctx.font = "20px Arial";
-      ctx.fillStyle = "black";
-      ctx.textAlign = "center";
-
-      const equation = [
-        "x = 16 sin³(t)",
-        "y = 13 cos(t) - 5 cos(2t)",
-        "- 2 cos(3t) - cos(4t)"
-      ];
-
-      equation.forEach((line, index) => {
-        ctx.fillText(line, centerX, centerY - 50 + index * 30); // 調整文本位置
+    books.forEach((book, index) => {
+      book.addEventListener('click', () => {
+        currentBook = index;
+        document.getElementById('question-title').textContent = `題目：${book.dataset.question}（請輸入對應的數字）`;
+        questionContainer.classList.remove('hidden');
       });
-    }
-
-    // 主程序
-    function draw() {
-      //ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
-      drawHeart(); // 繪製愛心
-      writeEquation(); // 寫入公式
-    }
-
-    // Main game loop
-    function gameLoop() {
-      clearCanvas();
-      updatePlayer();
-      drawPlayer();
-      draw();
-      requestAnimationFrame(gameLoop);
-
-    }
-
-
-    //draw();
-
-
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth; // 設置畫布寬度為窗口寬度
-      canvas.height = window.innerHeight; // 設置畫布高度為窗口高度
-      draw(); // 繪製愛心和公式
-    }
-
-    // 初始化畫布大小
-    resizeCanvas();
-
-
-
-
-    // 監聽窗口大小改變事件
-    window.addEventListener("resize", resizeCanvas);
-    //show heart
-    window.addEventListener("resize", draw);
-
-    // Event listener for mouse clicks
-    canvas.addEventListener("click", (e) => {
-      const rect = canvas.getBoundingClientRect();
-      player.targetX = e.clientX - rect.left - playerSize / 2;
-      player.targetY = e.clientY - rect.top - playerSize / 2;
     });
 
-    // Start the game loop
-    gameLoop()
+    function submitAnswer() {
+      const userAnswer = parseInt(document.getElementById('answer-input').value);
+      if (userAnswer === answers[currentBook]) {
+        alert('阿筠真聰明！');
+        userAnswers[currentBook] = userAnswer;
+        books[currentBook].classList.add('completed');
+        questionContainer.classList.add('hidden');
+        document.getElementById('answer-input').value = '';
+
+        if (userAnswers.filter(a => a !== undefined).length === 9) {
+          unlockMagicSquare();
+        }
+      } else {
+        alert('阿筠答錯了>< 再是一次看看！');
+      }
+    }
+
+    function unlockMagicSquare() {
+      alert('以為結束了嗎?進來有看到下面還有個九宮格了吧!還有一題哦XD');
+      const sortedAnswers = [...userAnswers].sort((a, b) => a - b);
+      hintContainer.classList.remove('hidden');
+      hintNumbers.textContent = `妳的數字: ${sortedAnswers.join(', ')}`;
+      magicSquare.classList.remove('hidden');
+      magicCheckButton.classList.remove('hidden');
+    }
+
+    function checkMagicSquare() {
+      const inputs = document.querySelectorAll('.square-input');
+      const inputValues = Array.from(inputs).map(input => parseInt(input.value) || 0);
+
+      const sortedInputValues = [...inputValues].sort((a, b) => a - b);
+      const sortedUserAnswers = [...userAnswers].sort((a, b) => a - b);
+
+      if (JSON.stringify(sortedInputValues) !== JSON.stringify(sortedUserAnswers)) {
+        alert('阿筠答錯了>< 再試一次看看！');
+        return;
+      }
+
+      const isValidMagicSquare =
+        inputValues[0] + inputValues[1] + inputValues[2] === 12 &&
+        inputValues[3] + inputValues[4] + inputValues[5] === 12 &&
+        inputValues[6] + inputValues[7] + inputValues[8] === 12 &&
+        inputValues[0] + inputValues[3] + inputValues[6] === 12 &&
+        inputValues[1] + inputValues[4] + inputValues[7] === 12 &&
+        inputValues[2] + inputValues[5] + inputValues[8] === 12;
+
+      if (isValidMagicSquare) {
+        displayConfession();
+      } else {
+        alert('阿筠答錯了>< 再試一次看看！');
+      }
+    }
+
+    function displayConfession() {
+      document.body.innerHTML = `
+        <h1>To 阿筠(潛在老婆)</h1>
+        <p>接下來的話，我會親自跟妳說...</p>
+      `;
+    }
   </script>
 </body>
 </html>
